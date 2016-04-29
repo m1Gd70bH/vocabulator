@@ -19,17 +19,14 @@ namespace Vocabulator
             //to do: check online database
             try
             {      
-                //set path (local)
-                if (connection == null)
+                if (connection == null) //set path (local)
                 {
                     connection = new SQLiteConnection("Data Source=vtrainerdb.sqlite;Version=3;");
                 }
-                //open db
-                if (connection != null && connection.State != ConnectionState.Open)
+                if (connection != null && connection.State != ConnectionState.Open) //open db
                 {
                     connection.Open();
-                    //test command
-                    SQLiteCommand command = new SQLiteCommand("SELECT date('now');", connection);
+                    SQLiteCommand command = new SQLiteCommand("SELECT date('now');", connection);   //test command
                     command.Prepare();
                     SQLiteDataReader reader = command.ExecuteReader();
                 }
@@ -251,7 +248,7 @@ namespace Vocabulator
         }
 
         /// <summary>
-        /// get unit by unit-id
+        /// get unitname by unit-id
         /// </summary>
         /// <param name="lessonid"></param>
         /// <returns></returns>
@@ -368,7 +365,7 @@ namespace Vocabulator
         }
 
         /// <summary>
-        /// read knwon vocabs from db into list by groupid
+        /// read knwon vocabs from db into list by groupid and userId
         /// </summary>
         /// <param name="groupId"></param>
         /// <param name="userId"></param>
@@ -391,7 +388,7 @@ namespace Vocabulator
                             vocab.id = reader.GetInt32(0);
                             vocab.english = reader.GetString(1);
                             vocab.german = reader.GetString(2);
-                            vocab.picturepath = reader.GetValue(3).ToString(); //NULL abfangen
+                            vocab.picturepath = reader.GetValue(3).ToString();
                             vocab.soundpath = reader.GetValue(4).ToString();
                             vocab.level = GetVocabLevel(vocab.id, userId);
                             vocabs.Add(vocab);
@@ -589,6 +586,24 @@ namespace Vocabulator
                 command.Prepare();
                 command.Parameters.AddWithValue("picture_path", picture_path);
                 command.Parameters.AddWithValue("id",vocabid);
+                try
+                {
+                    command.ExecuteNonQuery();
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception(ex.Message);
+                }
+            }
+        }
+
+        internal void DeleteVocab(int vocabid)
+        {
+            using (SQLiteCommand command = new SQLiteCommand(connection))
+            {
+                command.CommandText = "DELETE FROM vocabulary WHERE id = @id";
+                command.Prepare();
+                command.Parameters.AddWithValue("id", vocabid);
                 try
                 {
                     command.ExecuteNonQuery();

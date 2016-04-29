@@ -25,7 +25,7 @@ namespace Vocabulator
         string langswitch;
         
         List<Vocab> vocabulary;
-        List<int> rightAnswerList;
+        //List<int> rightAnswerList;
         
         public StudentForm(int userId, int lessonId, int groupId)
         {
@@ -33,6 +33,7 @@ namespace Vocabulator
             this.userId = userId;
             this.groupId = groupId;
             this.lessonId = lessonId;
+            langswitch = "german";
         }
 
         private void StudentForm_Load(object sender, EventArgs e)

@@ -32,7 +32,7 @@ namespace Vocabulator
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(TeacherForm));
             this.UnitSelectBox = new System.Windows.Forms.ComboBox();
-            this.LessonLabel = new System.Windows.Forms.Label();
+            this.UnitLabel = new System.Windows.Forms.Label();
             this.QuestionTextBox = new System.Windows.Forms.RichTextBox();
             this.QuestionLabel = new System.Windows.Forms.Label();
             this.AnswerTextBox = new System.Windows.Forms.RichTextBox();
@@ -40,7 +40,7 @@ namespace Vocabulator
             this.NextSaveButton = new System.Windows.Forms.Button();
             this.GroupLabel = new System.Windows.Forms.Label();
             this.GroupSelectBox = new System.Windows.Forms.ComboBox();
-            this.QuestionComBoxLabel = new System.Windows.Forms.Label();
+            this.VocabComBoxLabel = new System.Windows.Forms.Label();
             this.VocabSelectBox = new System.Windows.Forms.ComboBox();
             this.PictureLabel = new System.Windows.Forms.Label();
             this.PicBox = new System.Windows.Forms.PictureBox();
@@ -80,14 +80,14 @@ namespace Vocabulator
             this.UnitSelectBox.TabIndex = 2;
             this.UnitSelectBox.SelectedIndexChanged += new System.EventHandler(this.UnitComBox_SelectedIndexChanged);
             // 
-            // LessonLabel
+            // UnitLabel
             // 
-            this.LessonLabel.AutoSize = true;
-            this.LessonLabel.Location = new System.Drawing.Point(322, 24);
-            this.LessonLabel.Name = "LessonLabel";
-            this.LessonLabel.Size = new System.Drawing.Size(41, 13);
-            this.LessonLabel.TabIndex = 3;
-            this.LessonLabel.Text = "Lesson";
+            this.UnitLabel.AutoSize = true;
+            this.UnitLabel.Location = new System.Drawing.Point(322, 24);
+            this.UnitLabel.Name = "UnitLabel";
+            this.UnitLabel.Size = new System.Drawing.Size(26, 13);
+            this.UnitLabel.TabIndex = 3;
+            this.UnitLabel.Text = "Unit";
             // 
             // QuestionTextBox
             // 
@@ -151,14 +151,14 @@ namespace Vocabulator
             this.GroupSelectBox.TabIndex = 9;
             this.GroupSelectBox.SelectedIndexChanged += new System.EventHandler(this.GroupSelectBox_SelectedIndexChanged);
             // 
-            // QuestionComBoxLabel
+            // VocabComBoxLabel
             // 
-            this.QuestionComBoxLabel.AutoSize = true;
-            this.QuestionComBoxLabel.Location = new System.Drawing.Point(322, 103);
-            this.QuestionComBoxLabel.Name = "QuestionComBoxLabel";
-            this.QuestionComBoxLabel.Size = new System.Drawing.Size(49, 13);
-            this.QuestionComBoxLabel.TabIndex = 12;
-            this.QuestionComBoxLabel.Text = "Question";
+            this.VocabComBoxLabel.AutoSize = true;
+            this.VocabComBoxLabel.Location = new System.Drawing.Point(322, 103);
+            this.VocabComBoxLabel.Name = "VocabComBoxLabel";
+            this.VocabComBoxLabel.Size = new System.Drawing.Size(86, 13);
+            this.VocabComBoxLabel.TabIndex = 12;
+            this.VocabComBoxLabel.Text = "Vocab (A and Q)";
             // 
             // VocabSelectBox
             // 
@@ -195,7 +195,7 @@ namespace Vocabulator
             this.AddChangePictureBtn.TabIndex = 16;
             this.AddChangePictureBtn.Text = "Add";
             this.AddChangePictureBtn.UseVisualStyleBackColor = true;
-            this.AddChangePictureBtn.Click += new System.EventHandler(this.AddPictureButton_Click);
+            this.AddChangePictureBtn.Click += new System.EventHandler(this.AddChangePictureBtn_Click);
             // 
             // SoundLabel
             // 
@@ -214,7 +214,7 @@ namespace Vocabulator
             this.AddChangeSoundBtn.TabIndex = 18;
             this.AddChangeSoundBtn.Text = "Add";
             this.AddChangeSoundBtn.UseVisualStyleBackColor = true;
-            this.AddChangeSoundBtn.Click += new System.EventHandler(this.OpenFileButton_Click);
+            this.AddChangeSoundBtn.Click += new System.EventHandler(this.AddChangeSoundBtn_Click);
             // 
             // StudentResultsButton
             // 
@@ -235,7 +235,7 @@ namespace Vocabulator
             this.ImportDataBtn.TabIndex = 24;
             this.ImportDataBtn.Text = "Import Data";
             this.ImportDataBtn.UseVisualStyleBackColor = true;
-            this.ImportDataBtn.Click += new System.EventHandler(this.button1_Click);
+            this.ImportDataBtn.Click += new System.EventHandler(this.ImportDataBtn_Click);
             // 
             // CreateTestBtn
             // 
@@ -394,7 +394,7 @@ namespace Vocabulator
             this.Controls.Add(this.AddChangePictureBtn);
             this.Controls.Add(this.PicBox);
             this.Controls.Add(this.PictureLabel);
-            this.Controls.Add(this.QuestionComBoxLabel);
+            this.Controls.Add(this.VocabComBoxLabel);
             this.Controls.Add(this.VocabSelectBox);
             this.Controls.Add(this.GroupLabel);
             this.Controls.Add(this.GroupSelectBox);
@@ -403,7 +403,7 @@ namespace Vocabulator
             this.Controls.Add(this.AnswerTextBox);
             this.Controls.Add(this.QuestionLabel);
             this.Controls.Add(this.QuestionTextBox);
-            this.Controls.Add(this.LessonLabel);
+            this.Controls.Add(this.UnitLabel);
             this.Controls.Add(this.UnitSelectBox);
             this.Controls.Add(this.menuStrip);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
@@ -428,7 +428,7 @@ namespace Vocabulator
         #endregion
 
         private System.Windows.Forms.ComboBox UnitSelectBox;
-        private System.Windows.Forms.Label LessonLabel;
+        private System.Windows.Forms.Label UnitLabel;
         private System.Windows.Forms.RichTextBox QuestionTextBox;
         private System.Windows.Forms.Label QuestionLabel;
         private System.Windows.Forms.RichTextBox AnswerTextBox;
@@ -436,7 +436,7 @@ namespace Vocabulator
         private System.Windows.Forms.Button NextSaveButton;
         private System.Windows.Forms.Label GroupLabel;
         private System.Windows.Forms.ComboBox GroupSelectBox;
-        private System.Windows.Forms.Label QuestionComBoxLabel;
+        private System.Windows.Forms.Label VocabComBoxLabel;
         private System.Windows.Forms.ComboBox VocabSelectBox;
         private System.Windows.Forms.Label PictureLabel;
         private System.Windows.Forms.PictureBox PicBox;

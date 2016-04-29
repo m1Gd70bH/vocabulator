@@ -15,10 +15,9 @@ namespace Vocabulator
         [STAThread]
         static void Main()
         {
-            //run app
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new TeacherForm());
+            Application.Run(new TeacherForm()); //run app, test mode, should be LoginForm
         }
     }
 }
