@@ -574,11 +574,35 @@ namespace Vocabulator
         }
 
         /// <summary>
+        /// set sound path in db
+        /// </summary>
+        /// <param name="vocabid"></param>
+        /// <param name="picture_path"></param>
+        public void SetSoundPath(int vocabid, string sound_path)
+        {
+            using (SQLiteCommand command = new SQLiteCommand(connection))
+            {
+                command.CommandText = "UPDATE vocabulary SET sound_path = @sound_path WHERE id = @id";
+                command.Prepare();
+                command.Parameters.AddWithValue("sound_path", sound_path);
+                command.Parameters.AddWithValue("id", vocabid);
+                try
+                {
+                    command.ExecuteNonQuery();
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception(ex.Message);
+                }
+            }
+        }
+
+        /// <summary>
         /// set picture path in db
         /// </summary>
         /// <param name="vocabid"></param>
         /// <param name="picture_path"></param>
-        public void SetPicture(int vocabid, string picture_path)
+        public void SetPicturePath(int vocabid, string picture_path)
         {
             using (SQLiteCommand command = new SQLiteCommand(connection))
             {

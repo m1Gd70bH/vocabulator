@@ -17,5 +17,9 @@ namespace Vocabulator
             InitializeComponent();
         }
 
+        private void ReportTeacherForm_Load(object sender, EventArgs e)
+        {
+
+        }
     }
 }

@@ -13,41 +13,22 @@ namespace Vocabulator
         private const int NumberOfRetries = 10;
         private const int DelayOnRetry = 1000;
 
-        public void Filecopy(string source, string target, string oldFileName,string newFileName)
+        public void Filecopy(string source, string target)
         {
-            string sourceFile = System.IO.Path.Combine(source, oldFileName);
-            string destFile = System.IO.Path.Combine(target, newFileName);
-
-            //test directory
-            if (!System.IO.Directory.Exists(target))
+            string targetdirectory = Path.GetDirectoryName(target) + Path.DirectorySeparatorChar;
+            if (!System.IO.Directory.Exists(targetdirectory))   //create/test directory
             {
-                System.IO.Directory.CreateDirectory(target);
+                System.IO.Directory.CreateDirectory(targetdirectory);
             }
-            //copy
-            try
-            {
-                System.IO.File.Copy(sourceFile, destFile, true);
-            }
-            catch (Exception ex)
-            {
-                throw new IOException(ex.Message);
-            }
-        }
-
-        public bool FileDelete(string target)
-        {
-            //start GC manual,....dispose in Teacherform seems not to relase that filelock, rly poor
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-            //check file
-            if (!System.IO.File.Exists(target))
+            if (!System.IO.File.Exists(target)) //copy
             {
                 for (int i = 1; i <= NumberOfRetries; ++i)
                 {
                     try
                     {
-                        System.IO.File.Delete(target);
-                        return true;
+                        GC.Collect();    //start GC manual
+                        GC.WaitForPendingFinalizers();
+                        System.IO.File.Copy(source, target, true);
                     }
                     catch (Exception ex)
                     {
@@ -57,7 +38,31 @@ namespace Vocabulator
                     }
                 }
             }
-            return false;   
+        }
+
+        public bool FileDelete(string target)
+        {
+            if (!System.IO.File.Exists(target)) //check file
+            {
+                for (int i = 1; i <= NumberOfRetries; i++)
+                {
+                    try
+                    {
+                        GC.Collect();    //start GC manual
+                        GC.WaitForPendingFinalizers();
+                        System.IO.File.Delete(target);
+                        return true;
+                    }
+                    catch (Exception ex)
+                    {
+                        if (i == NumberOfRetries) //last one, (re)throw exception, exit
+                            throw new IOException(ex.Message);
+                        Thread.Sleep(DelayOnRetry);
+                    }
+                    return false;
+                }
+            }
+            return false;
         }
     }
 }

@@ -1,12 +1,6 @@
 ﻿using System;
 using System.IO;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace Vocabulator
@@ -17,8 +11,8 @@ namespace Vocabulator
     public partial class TeacherForm : Form
     {
         Database db;
-        Util utility;
-        
+        Util Utility;
+        Vocab Vocab;
         /// <summary>
         /// default constructor, init window
         /// </summary>
@@ -28,13 +22,14 @@ namespace Vocabulator
         }
 
         /// <summary>
-        /// fill window with first data from db
+        /// fill window with data from db
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void TeacherForm_Load(object sender, EventArgs e)
         {
-            utility = new Util();   //setup io helper
+            Utility = new Util();   //io helper, filecopy function from Util.cs --> this maybe go online on server fileupload, for sync
+            Vocab = new Vocab();    //Vocab obj
             try
             {
                 db = new Database();    //database init
@@ -61,13 +56,13 @@ namespace Vocabulator
                 VocabSelectBox.Items.Add(German.german);    //add from db
             VocabSelectBox.Items.Add("Add..."); //add last entry
             VocabSelectBox.SelectedIndex = 0;   //set to first entry
-            Vocab vocab = (db.GetVocabs((GroupSelectBox.SelectedIndex + 1), //Vocab
+            Vocab = (db.GetVocabs((GroupSelectBox.SelectedIndex + 1), //load Vocab
                 db.getuserid("admin")))[VocabSelectBox.SelectedIndex];
-            QuestionTextBox.Text = vocab.german;
-            AnswerTextBox.Text = vocab.english;
-            if (db.GetPicturePathByVocabId(vocab.id) != "") //Picturebox init          
+            QuestionTextBox.Text = Vocab.german;    //set Vocab atttib
+            AnswerTextBox.Text = Vocab.english;
+            if (Vocab.picturepath!="") //Picturebox init          
             {
-                PicBox.Image = Image.FromFile(db.GetPicturePathByVocabId(vocab.id));    //picbox load image
+                PicBox.Image = Image.FromFile(Vocab.picturepath);    //picbox load image
                 PicBox.SizeMode = PictureBoxSizeMode.Zoom;  //autosize
                 AddChangePictureBtn.Text = "Change";
                 DeletePictureBtn.Enabled = true;
@@ -78,9 +73,9 @@ namespace Vocabulator
                 AddChangePictureBtn.Text = "Add";
                 DeletePictureBtn.Enabled = false;
             }
-            if (db.GetSoundPathByVocabId(vocab.id) != "") //Soundbox init, load sound
+            if (Vocab.soundpath != "") //Soundbox init, load sound
             {
-                WMPLib.IWMPMedia media = WMPbox.newMedia(db.GetSoundPathByVocabId(vocab.id));
+                WMPLib.IWMPMedia media = WMPbox.newMedia(Vocab.soundpath);
                 WMPbox.currentPlaylist.appendItem(media);
                 AddChangeSoundBtn.Text = "Change";
                 DeleteSoundBtn.Enabled = true;
@@ -114,6 +109,7 @@ namespace Vocabulator
         /// <param name="e"></param>
         private void ImportDataBtn_Click(object sender, EventArgs e)
         {
+            //TODO
             //"Text files (*.txt)|*.txt|All files (*.*)|*.*";
         }
 
@@ -124,24 +120,25 @@ namespace Vocabulator
         /// <param name="e"></param>
         private void AddChangeSoundBtn_Click(object sender, EventArgs e)
         {
-            Vocab vocab = (db.GetVocabs((GroupSelectBox.SelectedIndex + 1), db.getuserid("admin")))[VocabSelectBox.SelectedIndex];
             OpenFileDialog dialog = new OpenFileDialog();   //openfiledialog
             dialog.Filter = "(mp3,wav,mp4,mov,wmv,mpg)|*.mp3;*.wav;*.mp4;*.mov;*.wmv;*.mpg|all files|*.*";
             if (dialog.ShowDialog() == DialogResult.OK)
             {
-                string oldFileName = Path.GetFileName(dialog.FileName); //filecopy string
-                string newFileName = (db.getunitid(UnitSelectBox.Text) + db.getgroupid(GroupSelectBox.Text) + vocab.id  + ".Sound");
-                    Path.GetExtension(dialog.FileName);
-                string sourcefilepath = Path.GetDirectoryName(dialog.FileName);
-                string destinationfilepath = Environment.CurrentDirectory + "/data/audio/";
-                toolStripStatusLabel1.Text = ("Copy " + oldFileName + " from " + sourcefilepath +   //setup tooltip
-                    " to " + destinationfilepath + newFileName);
-                utility.Filecopy(sourcefilepath, destinationfilepath, oldFileName, newFileName);    //filecopy function from Util.cs
+                Path.GetExtension(dialog.FileName);
+                string sourcefilepath = Path.GetDirectoryName(dialog.FileName) + @"/" + Path.GetFileName(dialog.FileName);
+                Vocab.soundpath = Environment.CurrentDirectory + "/data/audio/"+
+                    (db.getunitid(UnitSelectBox.Text)) + db.getgroupid(GroupSelectBox.Text) + Vocab.id + ".Sound";
+                Utility.Filecopy(sourcefilepath, Vocab.soundpath);    //filecopy function from Util.cs
                 WMPbox.URL = dialog.FileName;   //media load sound
                 WMPLib.IWMPMedia media = WMPbox.newMedia(Path.GetFileName(dialog.FileName));
                 WMPbox.currentPlaylist.appendItem(media);
                 toolStripStatusLabel1.Text = "";    //refresh tooltip
+                if (NextSaveButton.Text != "Save")   //check if new vocab
+                {
+                    db.SetSoundPath(Vocab.id, Vocab.soundpath); //save path to db
+                }
             }
+
         }
 
         /// <summary>
@@ -151,27 +148,23 @@ namespace Vocabulator
         /// <param name="e"></param>
         private void AddChangePictureBtn_Click(object sender, EventArgs e)
         {
-            Vocab vocab = (db.GetVocabs((GroupSelectBox.SelectedIndex + 1),
-                db.getuserid("admin")))[VocabSelectBox.SelectedIndex];
             OpenFileDialog dialog = new OpenFileDialog();   //openfiledialog
             dialog.Filter = "all files|*.*";
             if (dialog.ShowDialog() == DialogResult.OK)
             {
-                string oldFileName = Path.GetFileName(dialog.FileName); //filecopy strings
-                string newFileName = (vocab.id + ".Picture"); 
-                    Path.GetExtension(dialog.FileName);
-                string sourcefilepath = Path.GetDirectoryName(dialog.FileName);
-                string destinationfilepath =  Environment.CurrentDirectory + "/data/picture/";
-                toolStripStatusLabel1.Text = ("Copy " + oldFileName + " from " + sourcefilepath +
-                    " to " + destinationfilepath + newFileName);    //setup tooltipp
-                Util utility = new Util();  //filecopy funtcion from Util.cs --> this maybe go online on server fileupload, for sync
-                utility.Filecopy(sourcefilepath, destinationfilepath, oldFileName, newFileName);
-                PicBox.Image = Image.FromFile(destinationfilepath + newFileName);   //picbox load image
-                this.PicBox.SizeMode = PictureBoxSizeMode.Zoom; //autosize
-                toolStripStatusLabel1.Text = "";    //refresh tooltip
-                db.SetPicture(vocab.id, destinationfilepath + newFileName); //save path into db
-                DeletePictureBtn.Enabled = true;
+                Path.GetExtension(dialog.FileName);
+                string sourcefilepath = Path.GetDirectoryName(dialog.FileName)+ @"/" + Path.GetFileName(dialog.FileName);
+                Vocab.picturepath = Environment.CurrentDirectory + "/data/picture/" +
+                    db.getunitid(UnitSelectBox.Text) + db.getgroupid(GroupSelectBox.Text) + Vocab.id + ".Picture";
+                Utility.Filecopy(sourcefilepath, Vocab.picturepath);
+                PicBox.Image = Image.FromFile(Vocab.picturepath);   //picbox load image
+                PicBox.SizeMode = PictureBoxSizeMode.Zoom; //autosize
+                DeletePictureBtn.Enabled = true;    //btns
                 AddChangePictureBtn.Text = "Change";
+                if(NextSaveButton.Text != "Save")   //check if new vocab
+                {
+                    db.SetPicturePath(Vocab.id, Vocab.picturepath); //save path to db
+                }
             }
         }
 
@@ -214,12 +207,15 @@ namespace Vocabulator
         /// <param name="e"></param>
         private void NextSaveButton_Click(object sender, EventArgs e)
         {
-            if(NextSaveButton.Text=="Save")
+            if (NextSaveButton.Text=="Save")
             {
-                Vocab NewVocab = new Vocab();    //generate new Vocab
-                NewVocab.english = AnswerTextBox.Text;  //read text box, set Vocab propertys
-                NewVocab.german = QuestionTextBox.Text;
-                db.SaveNewVocab(NewVocab,GroupSelectBox.SelectedIndex + 1, "", ""); //save to db
+                //get filepaths if allrdy set
+                string picturepath = Vocab.picturepath;
+                string soundpath = Vocab.soundpath;
+                Vocab = new Vocab();    //generate new Vocab
+                Vocab.english = AnswerTextBox.Text;  //read text box, set Vocab propertys
+                Vocab.german = QuestionTextBox.Text;
+                db.SaveNewVocab(Vocab,GroupSelectBox.SelectedIndex + 1, picturepath, soundpath); //save to db
                 toolStripStatusLabel1.Text = "Q: "+QuestionTextBox.Text + "A: "+ AnswerTextBox.Text+"saved";    //settooltip
                 VocabSelectBox.Items.Clear();   //clear vocablist
                 foreach (Vocab German in db.GetVocabs((GroupSelectBox.SelectedIndex + 1), db.getuserid("admin")))   //reload vocablist
@@ -234,38 +230,8 @@ namespace Vocabulator
             {
                 if (VocabSelectBox.SelectedIndex +1< VocabSelectBox.Items.Count) //check if we have a next vocab
                 {
-                    Vocab vocab = (db.GetVocabs((GroupSelectBox.SelectedIndex + 1), 
+                    Vocab = (db.GetVocabs((GroupSelectBox.SelectedIndex + 1), 
                         db.getuserid("admin")))[VocabSelectBox.SelectedIndex];  //load next vocab in Textbox
-                    QuestionTextBox.Text = vocab.german;
-                    AnswerTextBox.Text = vocab.english;
-                    if (db.GetPicturePathByVocabId(vocab.id) != "") //load picture, set btns              
-                    {
-                        PicBox.Image = Image.FromFile(db.GetPicturePathByVocabId(vocab.id)); //picbox load image
-                        PicBox.SizeMode = PictureBoxSizeMode.Zoom; //autosize
-                        AddChangePictureBtn.Text = "Change";
-                        DeletePictureBtn.Enabled = true;
-                    }
-                    else
-                    {
-                        PicBox.Image = null;
-                        AddChangePictureBtn.Text = "Add";
-                        DeletePictureBtn.Enabled = false;
-                    }
-                    if (db.GetSoundPathByVocabId(vocab.id) != "") //load sound
-                    {
-                        WMPLib.IWMPMedia media = WMPbox.newMedia(db.GetSoundPathByVocabId(vocab.id));
-                        WMPbox.currentPlaylist.appendItem(media);
-                        AddChangeSoundBtn.Text = "Change";
-                        DeleteSoundBtn.Enabled = true;
-                    }
-                    else
-                    {
-                        WMPbox.close(); //clear soundbox
-                        AddChangeSoundBtn.Text = "Add";
-                        DeleteSoundBtn.Enabled = false; //set btns
-                        AddChangePictureBtn.Enabled = false;
-                        AddChangeSoundBtn.Enabled = false;
-                    }
                     VocabSelectBox.SelectedIndex++; //set VocabSelectBox
                 }
                 else //no next vocab
@@ -284,7 +250,7 @@ namespace Vocabulator
         }
 
         /// <summary>
-        /// if unit index changed reinit affected data (vocab,pic,sound,btns)
+        /// if unit index changed reinit affected data (vocab)
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -304,39 +270,13 @@ namespace Vocabulator
             //add last entry
             VocabSelectBox.Items.Add("Add...");
             //Textbox
-            Vocab vocab = (db.GetVocabs((GroupSelectBox.SelectedIndex + 1), db.getuserid("admin")))[VocabSelectBox.SelectedIndex];
-            QuestionTextBox.Text = vocab.german;
-            AnswerTextBox.Text = vocab.english;
-            if (db.GetPicturePathByVocabId(vocab.id) != "") //load picture    
-            {
-                PicBox.Image = Image.FromFile(db.GetPicturePathByVocabId(vocab.id)); //picbox load image
-                PicBox.SizeMode = PictureBoxSizeMode.Zoom; //autosize
-                AddChangePictureBtn.Text = "Change";
-                DeletePictureBtn.Enabled = true;
-            }
-            else
-            {
-                PicBox.Image = null;
-                AddChangePictureBtn.Text = "Add";
-                DeletePictureBtn.Enabled = false;
-            }
-            if (db.GetSoundPathByVocabId(vocab.id) != "") //load sound
-            {
-                WMPLib.IWMPMedia media = WMPbox.newMedia(db.GetSoundPathByVocabId(vocab.id));
-                WMPbox.currentPlaylist.appendItem(media);
-                AddChangeSoundBtn.Text = "Change";
-                DeleteSoundBtn.Enabled = true;
-            }
-            else
-            {
-                WMPbox.close(); //clear soundbox
-                AddChangeSoundBtn.Text = "Add";
-                DeleteSoundBtn.Enabled = false; //set btns
-            }
+            Vocab = (db.GetVocabs((GroupSelectBox.SelectedIndex + 1), db.getuserid("admin")))[VocabSelectBox.SelectedIndex];
+            QuestionTextBox.Text = Vocab.german;
+            AnswerTextBox.Text = Vocab.english;
         }
 
         /// <summary>
-        /// /// if unit index changed reinit affected data (vocab,pic,sound,btns)
+        /// /// if unit index changed reinit affected data (vocab)
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -347,35 +287,9 @@ namespace Vocabulator
                 VocabSelectBox.Items.Add(German.german + "...");
             VocabSelectBox.SelectedIndex = 0;   //set index
             VocabSelectBox.Items.Add("Add..."); //add last entry
-            Vocab vocab = (db.GetVocabs((GroupSelectBox.SelectedIndex + 1), db.getuserid("admin")))[VocabSelectBox.SelectedIndex];  //Textbox 
-            QuestionTextBox.Text = vocab.german;
-            AnswerTextBox.Text = vocab.english;         
-            if (db.GetPicturePathByVocabId(vocab.id) != "") //load picture
-            {
-                PicBox.Image = Image.FromFile(db.GetPicturePathByVocabId(vocab.id));    //picbox load image
-                PicBox.SizeMode = PictureBoxSizeMode.Zoom;  //autosize
-                AddChangePictureBtn.Text = "Change";
-                DeletePictureBtn.Enabled = true;
-            }
-            else
-            {
-                PicBox.Image = null;
-                AddChangePictureBtn.Text = "Add";
-                DeletePictureBtn.Enabled = false;
-            }
-            if (db.GetSoundPathByVocabId(vocab.id) != "")   //load sound
-            {
-                WMPLib.IWMPMedia media = WMPbox.newMedia(db.GetSoundPathByVocabId(vocab.id));
-                WMPbox.currentPlaylist.appendItem(media);
-                AddChangeSoundBtn.Text = "Change";
-                DeleteSoundBtn.Enabled = true;
-            }
-            else
-            {
-                WMPbox.close(); //clear soundbox
-                AddChangeSoundBtn.Text = "Add";
-                DeleteSoundBtn.Enabled = false; //set btns
-            }
+            Vocab = (db.GetVocabs((GroupSelectBox.SelectedIndex + 1), db.getuserid("admin")))[VocabSelectBox.SelectedIndex];  //Textbox 
+            QuestionTextBox.Text = Vocab.german;
+            AnswerTextBox.Text = Vocab.english;
         }
 
         /// <summary>
@@ -390,19 +304,20 @@ namespace Vocabulator
                 QuestionTextBox.Clear();
                 AnswerTextBox.Clear();
                 PicBox.Image = null;
-                AddChangePictureBtn.Enabled = false;
-                AddChangeSoundBtn.Enabled = false;
+                AddChangePictureBtn.Enabled = true;
+                AddChangeSoundBtn.Enabled = true;
+                DeleteVocabBtn.Enabled = false; 
                 NextSaveButton.Text = "Save";
             }
             else
             {
-                Vocab vocab = (db.GetVocabs((GroupSelectBox.SelectedIndex + 1),
+                Vocab = (db.GetVocabs((GroupSelectBox.SelectedIndex + 1),
                     db.getuserid("admin")))[VocabSelectBox.SelectedIndex];  //load vocab
-                QuestionTextBox.Text = vocab.german;
-                AnswerTextBox.Text = vocab.english;
-                if (db.GetPicturePathByVocabId(vocab.id) != "") //load picture              
+                QuestionTextBox.Text = Vocab.german;
+                AnswerTextBox.Text = Vocab.english;
+                if (Vocab.picturepath != "") //load picture              
                 {
-                    PicBox.Image = Image.FromFile(db.GetPicturePathByVocabId(vocab.id));    //picbox load image
+                    PicBox.Image = Image.FromFile(Vocab.picturepath);    //picbox load image
                     PicBox.SizeMode = PictureBoxSizeMode.Zoom;  //autosize
                     AddChangePictureBtn.Text = "Change";
                     DeletePictureBtn.Enabled = true;
@@ -413,9 +328,9 @@ namespace Vocabulator
                     AddChangePictureBtn.Text = "Add";
                     DeletePictureBtn.Enabled = false;
                 }
-                if (db.GetSoundPathByVocabId(vocab.id) != "")   //load sound
+                if (Vocab.soundpath != "")   //load sound
                 {
-                    WMPLib.IWMPMedia media = WMPbox.newMedia(db.GetSoundPathByVocabId(vocab.id));
+                    WMPLib.IWMPMedia media = WMPbox.newMedia(Vocab.soundpath);
                     WMPbox.currentPlaylist.appendItem(media);
                     AddChangeSoundBtn.Text = "Change";
                     DeleteSoundBtn.Enabled = true;
@@ -429,11 +344,13 @@ namespace Vocabulator
                 NextSaveButton.Text = "Next";
                 AddChangePictureBtn.Enabled = true;
                 AddChangeSoundBtn.Enabled = true;
+                DeleteVocabBtn.Enabled = true;
             }
             if (VocabSelectBox.SelectedIndex == 0)  //set to previous btn
                 PrevBtn.Enabled = false;
             else
                 PrevBtn.Enabled = true;
+            toolStripStatusLabel1.Text = "";    //refresh tooltip
         }
 
         /// <summary>
@@ -461,18 +378,16 @@ namespace Vocabulator
         /// <param name="e"></param>
         private void DeletePictureBtn_Click(object sender, EventArgs e)
         {
-            Vocab vocab = (db.GetVocabs((GroupSelectBox.SelectedIndex + 1), 
-                db.getuserid("admin")))[VocabSelectBox.SelectedIndex];  //get vocab
-            toolStripStatusLabel1.Text = "Delete " + db.GetPicturePathByVocabId(vocab.id);  //set tooltip
+            toolStripStatusLabel1.Text = "Delete " + db.GetPicturePathByVocabId(Vocab.id);  //set tooltip
             PicBox.Image.Dispose(); //clear picbox
             PicBox.Image = null;
-            Util utility = new Util();  //filecopy funtcion from Util.cs --> this maybe go online on server fileupload, for sync
-            if (!utility.FileDelete(db.GetPicturePathByVocabId(vocab.id)))
+            if (!Utility.FileDelete(Vocab.picturepath))
             {
                 MessageBox.Show("Unable to delete File (invalid path or file not found)!",
                     "Vocabulator", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-            db.DeletePicture(vocab);    //delete path from db
+            db.DeletePicture(Vocab);    //delete path from db
+            Vocab.picturepath = "";
             DeletePictureBtn.Enabled = false;   //set btns
             AddChangePictureBtn.Text = "Add";
             toolStripStatusLabel1.Text = "";    //refresh tooltip
@@ -485,15 +400,14 @@ namespace Vocabulator
         /// <param name="e"></param>
         private void DeleteSoundBtn_Click(object sender, EventArgs e)
         {
-            Vocab vocab = (db.GetVocabs((GroupSelectBox.SelectedIndex + 1), db.getuserid("admin")))[VocabSelectBox.SelectedIndex]; //get vocab
-            toolStripStatusLabel1.Text = "Delete " + db.GetSoundPathByVocabId(vocab.id); //set tooltip
+            toolStripStatusLabel1.Text = "Delete " + Vocab.soundpath; //set tooltip
             WMPbox.close(); //clear soundbox
             WMPbox.Dispose();                        
-            Util utility = new Util(); //filecopy funtcion from Util.cs --> this maybe go online on server fileupload, for sync
-            if (!utility.FileDelete(db.GetPicturePathByVocabId(vocab.id)))
+            if (!Utility.FileDelete(Vocab.soundpath))
                 MessageBox.Show("Unable to delete File (invalid path or file not found)!",
                     "Vocabulator", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            db.DeleteSound(vocab); //delete path from db
+            db.DeleteSound(Vocab); //delete path from db
+            Vocab.soundpath = "";
             DeleteSoundBtn.Enabled = false; //set btns
             AddChangeSoundBtn.Text = "Add";
             toolStripStatusLabel1.Text = ""; //refresh tooltip
@@ -507,9 +421,7 @@ namespace Vocabulator
         private void DeleteVocabBtn_Click(object sender, EventArgs e)
         {
             int temp = VocabSelectBox.SelectedIndex;    //save index to tempvar
-            Vocab vocab = (db.GetVocabs((GroupSelectBox.SelectedIndex + 1), //get vocab
-                db.getuserid("admin")))[VocabSelectBox.SelectedIndex];
-            db.DeleteVocab(vocab.id);   //delete vocab
+            db.DeleteVocab(Vocab.id);   //delete vocab
             VocabSelectBox.Items.Clear();   //reload vocablist
             foreach (Vocab German in db.GetVocabs((GroupSelectBox.SelectedIndex + 1), db.getuserid("admin")))
                 VocabSelectBox.Items.Add(German.german); //add from db
@@ -518,6 +430,14 @@ namespace Vocabulator
                 VocabSelectBox.SelectedIndex = temp - 1;
             else
                 VocabSelectBox.SelectedIndex = 0;
+        }
+
+        private void fileToolStripMenuItem1_Click(object sender, EventArgs e)
+        {//nothing to do here
+        }
+
+        private void toolStripMenuItem1_Click(object sender, EventArgs e)
+        {//nothing to do here
         }
     }
 }
